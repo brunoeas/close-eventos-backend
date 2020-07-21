@@ -52,7 +52,7 @@ class App {
         console.error(`> Ocorreu um erro não tratado: \n${err}`);
         res.status(500).send({
           message: err?.message || 'Ocorreu um erro no servidor',
-          error: process.env.APP_IN_PROD ? undefined : err
+          error: err
         });
       }
     });

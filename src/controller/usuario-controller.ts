@@ -3,8 +3,8 @@ import Evento from '../models/evento';
 import UsuarioConverter from '../converter/usuario-converter';
 import ExceptionEnum from '../exception/exception-enum';
 import CustomException from '../exception/custom-exception';
-import { Op } from 'sequelize';
 import { formatDate } from '../util';
+import EventoUsuario from '../models/evento-usuario';
 
 /**
  * Controller do Usuário
@@ -62,12 +62,21 @@ class UsuarioController {
    * @returns {Promise<any>} - Promise void
    */
   public async deleteUsuarioById(id: number): Promise<void> {
-    await Evento.destroy({ where: { idAdministrador: id }, logging: true });
-    const numberOfDestroyedRows = await Usuario.destroy({ where: { idUsuario: id } });
-
-    if (numberOfDestroyedRows === 0) {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
       throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
     }
+
+    await EventoUsuario.destroy({ where: { idUsuario: id } });
+
+    const eventos = await Evento.findAll({ where: { idAdministrador: id } });
+    const promises = eventos.map(async evento => {
+      await EventoUsuario.destroy({ where: { idEvento: evento.idEvento } });
+      return evento.destroy();
+    });
+    await Promise.all(promises);
+
+    return usuario.destroy();
   }
 
   /**

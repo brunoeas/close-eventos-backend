@@ -40,6 +40,11 @@ class Usuario extends Model {
   public dsEmail: string;
 
   /**
+   * Senha
+   */
+  public dsSenha: string;
+
+  /**
    * Link da foto
    */
   public dsLinkFoto: string;

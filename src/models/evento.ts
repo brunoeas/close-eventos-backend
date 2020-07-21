@@ -1,6 +1,7 @@
 import getDefaultTableConfig from '../config/default-table-config';
 import { Model, DataTypes } from 'sequelize';
 import Usuario from './usuario';
+import EventoUsuario from './evento-usuario';
 
 /**
  * Modelo do Eveno
@@ -82,7 +83,7 @@ class Evento extends Model {
   /**
    * Lista de convidados
    */
-  public participantesList: Usuario[] = [];
+  public participantesList: EventoUsuario[];
 }
 
 /**
@@ -154,12 +155,6 @@ Evento.init(
   getDefaultTableConfig({ tableName: 'evento' })
 );
 
-Evento.belongsToMany(Usuario, {
-  through: 'eventousuario',
-  foreignKey: 'idEvento',
-  as: 'participantesList',
-  onDelete: 'CASCADE'
-});
-// Usuario.belongsToMany(Evento, { through: 'eventousuario', foreignKey: 'idUsuario' });
+Evento.belongsTo(Usuario, { foreignKey: 'idAdministrador', as: 'administrador' });
 
 export default Evento;

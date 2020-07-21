@@ -18,6 +18,7 @@ class UsuarioConverter extends Converter<Usuario> {
     orm.dtNascimento = formatDate(dto.dtNascimento, 'YYYY-MM-DD');
     orm.nrTelefone = dto.nrTelefone;
     orm.dsEmail = dto.dsEmail;
+    orm.dsSenha = dto.dsSenha;
     orm.dsLinkFoto = dto.dsLinkFoto;
     orm.tpSexo = dto.tpSexo;
 
@@ -33,6 +34,7 @@ class UsuarioConverter extends Converter<Usuario> {
     dto.dtNascimento = formatDate(orm.dtNascimento, 'YYYY-MM-DD');
     dto.nrTelefone = orm.nrTelefone;
     dto.dsEmail = orm.dsEmail;
+    dto.dsSenha = orm.dsSenha;
     dto.dsLinkFoto = orm.dsLinkFoto;
     dto.tpSexo = orm.tpSexo;
 
