@@ -26,6 +26,10 @@ class EventoService extends Service {
       '/evento/:idEvento/:idUsuario',
       (this.addParticipante = this.addParticipante.bind(this))
     );
+    this.router.delete(
+      '/evento/:idEvento/:idUsuario',
+      (this.removeParticipante = this.removeParticipante.bind(this))
+    );
     this.router.post('/evento', (this.saveEvento = this.saveEvento.bind(this)));
     this.router.put('/evento', (this.updateEvento = this.updateEvento.bind(this)));
     this.router.delete('/evento/:id', (this.deleteEventoById = this.deleteEventoById.bind(this)));
@@ -117,6 +121,21 @@ class EventoService extends Service {
   private addParticipante(req: Request, res: Response, next: NextFunction) {
     this.eventoController
       .addParticipante(+req.params.idEvento, +req.params.idUsuario)
+      .then(() => res.send())
+      .catch(next);
+  }
+
+  /**
+   * Remove um participante de um evento
+   *
+   * @private
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  private removeParticipante(req: Request, res: Response, next: NextFunction) {
+    this.eventoController
+      .removeParticipante(+req.params.idEvento, +req.params.idUsuario)
       .then(() => res.send())
       .catch(next);
   }

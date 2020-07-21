@@ -5,7 +5,7 @@ import ExceptionEnum, { getExceptionCode } from './exception-enum';
  *
  * @class CustomException
  */
-class CustomException extends Error {
+class CustomException {
   /**
    * Mensagem do erro
    */
@@ -22,7 +22,6 @@ class CustomException extends Error {
    * @param {ExceptionEnum} exception - Exceção
    */
   public constructor(exception: ExceptionEnum) {
-    super(exception);
     this.message = exception;
     this.code = getExceptionCode(exception);
   }

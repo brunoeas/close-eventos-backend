@@ -55,6 +55,7 @@ class EventoConverter extends Converter<Evento> {
   public filterPropsDto(dto: any) {
     const {
       idEvento,
+      administrador,
       dsTitulo,
       dsEvento,
       dhInicio,
@@ -69,6 +70,7 @@ class EventoConverter extends Converter<Evento> {
     } = dto;
     return {
       idEvento,
+      administrador,
       dsTitulo,
       dsEvento,
       dhInicio,

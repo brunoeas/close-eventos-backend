@@ -3,8 +3,8 @@ import Evento from '../models/evento';
 import EventoConverter from '../converter/evento-converter';
 import ExceptionEnum from '../exception/exception-enum';
 import CustomException from '../exception/custom-exception';
-import { Op } from 'sequelize';
 import UsuarioConverter from '../converter/usuario-converter';
+import EventoUsuario from '../models/evento-usuario';
 
 /**
  * Controller do Evento
@@ -22,21 +22,31 @@ class EventoController {
    */
   private usuarioConverter = new UsuarioConverter();
 
+  /**
+   * Salva um novo evento
+   *
+   * @param {*} dto - DTO do novo evento
+   * @returns {Promise<any>} Promise com o objeto do novo evento
+   */
   public async saveEvento(dto: any): Promise<any> {
-    const evento = this.eventoConverter.dtoToOrm(dto);
+    const evento = this.eventoConverter.filterPropsDto(dto);
     evento.idEvento = null;
 
-    this.setAdministradorInOrm(evento, dto);
+    await this.setAdministradorInOrm(evento);
 
-    return Evento.create(evento, { include: [{ model: Usuario, as: 'administrador' }] }).then(
-      this.eventoConverter.ormToDto
-    );
+    return Evento.create(evento).then(this.eventoConverter.ormToDto);
   }
 
+  /**
+   * Atualiza um evento
+   *
+   * @param {*} dto - DTO do evento
+   * @returns {Promise<void>} Promise
+   */
   public async updateEvento(dto: any): Promise<void> {
-    const evento = this.eventoConverter.dtoToOrm(dto);
+    const evento = this.eventoConverter.filterPropsDto(dto);
 
-    this.setAdministradorInOrm(evento, dto);
+    await this.setAdministradorInOrm(evento);
 
     const [numberOfAffectedRows] = await Evento.update(evento, {
       where: { idEvento: evento.idEvento }
@@ -47,32 +57,53 @@ class EventoController {
     }
   }
 
+  /**
+   * Adiciona um novo participante em um evento
+   *
+   * @param {number} idEvento - ID do evento que vai ser relacionado
+   * @param {number} idUsuario - ID do usuário/participante
+   * @returns {Promise<void>} Promise
+   */
   public async addParticipante(idEvento: number, idUsuario: number): Promise<void> {
-    const evento = await Evento.findByPk(idEvento, {
-      include: [{ model: Usuario, as: 'participantesList' }]
-    });
+    await this.validateEventoAndUsuario(idEvento, idUsuario);
+
+    const [values, isNew] = await EventoUsuario.findOrCreate({ where: { idEvento, idUsuario } });
+    if (!isNew) {
+      throw new CustomException(ExceptionEnum.PARTICIPANTE_DUPLICADO);
+    }
+  }
+
+  /**
+   * Remove um participante de um evento
+   *
+   * @param {number} idEvento - ID do evento que vai ser relacionado
+   * @param {number} idUsuario - ID do usuário/participante
+   * @returns {Promise<void>} Promise
+   */
+  public async removeParticipante(idEvento: number, idUsuario: number): Promise<void> {
+    await this.validateEventoAndUsuario(idEvento, idUsuario);
+
+    const numberOfDeletedRows = await EventoUsuario.destroy({ where: { idEvento, idUsuario } });
+    if (numberOfDeletedRows === 0) {
+      throw new CustomException(ExceptionEnum.PARTICIPANTE_INEXISTENTE);
+    }
+  }
+
+  /**
+   * Deleta um evento pelo ID
+   *
+   * @param {number} id - ID do evento
+   * @returns {Promise<void>} Promise
+   */
+  public async deleteEventoById(id: number): Promise<void> {
+    const evento = await Evento.findByPk(id);
     if (!evento) {
       throw new CustomException(ExceptionEnum.EVENTO_INEXISTENTE);
     }
 
-    const novoParticipante = await Usuario.findByPk(idUsuario);
-    if (!novoParticipante) {
-      throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
-    }
+    await EventoUsuario.destroy({ where: { idEvento: evento.idEvento } });
 
-    const newParticipantes = [...evento.participantesList, novoParticipante];
-    evento.setAttributes('participantesList', newParticipantes);
-    evento.save();
-  }
-
-  public async deleteEventoById(id: number): Promise<void> {
-    const numberOfDestroyedRows = await Evento.destroy({
-      where: { [Op.or]: [{ idEvento: id }] } //, { participantesList: { [Op.contains]: id } }
-    });
-
-    if (numberOfDestroyedRows === 0) {
-      throw new CustomException(ExceptionEnum.EVENTO_INEXISTENTE);
-    }
+    return evento.destroy();
   }
 
   /**
@@ -106,19 +137,38 @@ class EventoController {
   }
 
   /**
+   * Valida os ID's de um evento e um usuário
+   *
+   * @private
+   * @param {number} idEvento - ID do Evento
+   * @param {number} idUsuario - ID do Usuário
+   * @returns {Promise<void>} Promise
+   */
+  private async validateEventoAndUsuario(idEvento: number, idUsuario: number): Promise<void> {
+    const countEvento = await Evento.count({ where: { idEvento } });
+    if (countEvento === 0) {
+      throw new CustomException(ExceptionEnum.EVENTO_INEXISTENTE);
+    }
+
+    const countUsuario = await Usuario.count({ where: { idUsuario } });
+    if (countUsuario === 0) {
+      throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
+    }
+  }
+
+  /**
    * Busca e setta o administrador no ORM do Evento
    *
    * @param {Evento} orm - ORM do Evento
    * @returns {Promise<void>} Promise
    */
-  private async setAdministradorInOrm(orm: Evento, dto: any): Promise<void> {
-    const usuario: Usuario = await Usuario.findByPk(dto.administrador.idUsuario);
-
-    if (!usuario) {
+  private async setAdministradorInOrm(dto: any): Promise<void> {
+    const countUsuario = await Usuario.count({ where: { idUsuario: dto.administrador.idUsuario } });
+    if (countUsuario === 0) {
       throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
     }
 
-    orm.administrador = usuario;
+    dto.idAdministrador = dto.administrador.idUsuario;
   }
 }
 
