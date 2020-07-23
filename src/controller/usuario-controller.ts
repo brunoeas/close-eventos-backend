@@ -18,6 +18,28 @@ class UsuarioController {
   private usuarioConverter = new UsuarioConverter();
 
   /**
+   * Valida o login
+   *
+   * @param {*} dto - DTO com os dados para login
+   */
+  public async login(dto: any) {
+    const usuario = await Usuario.findOne({ where: { dsEmail: dto.dsEmail, dsSenha: dto.dsSenha } });
+    if (!usuario) {
+      throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
+    }
+  }
+
+  /**
+   * Retorna o usuário logado
+   *
+   * @param {Usuario} userLogged - Usuário logado
+   * @returns DTO do usuário logado
+   */
+  public async findPerfil(userLogged: Usuario) {
+    return this.usuarioConverter.ormToDto(userLogged);
+  }
+
+  /**
    * Salva um novo Usuário
    *
    * @param {*} dto - DTO do Usuário
@@ -87,6 +109,10 @@ class UsuarioController {
    */
   public async findUsuarioById(id: number): Promise<any> {
     const usuarioORM = await Usuario.findByPk(id);
+    if (!usuarioORM) {
+      throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
+    }
+
     return this.usuarioConverter.ormToDto(usuarioORM);
   }
 

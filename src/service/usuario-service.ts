@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Service from './index';
 import UsuarioController from '../controller/usuario-controller';
+import { CustomRequest } from '../app';
 
 /**
  * Service do Usuário
@@ -21,10 +22,42 @@ class UsuarioService extends Service {
     super();
 
     this.router.get('/usuario', (this.findAllUsuarios = this.findAllUsuarios.bind(this)));
+    this.router.get('/usuario/perfil', (this.findPerfil = this.findPerfil.bind(this)));
     this.router.get('/usuario/:id', (this.findUsuarioById = this.findUsuarioById.bind(this)));
     this.router.post('/usuario', (this.saveUsuario = this.saveUsuario.bind(this)));
     this.router.put('/usuario', (this.updateUsuario = this.updateUsuario.bind(this)));
     this.router.delete('/usuario/:id', (this.deleteUsuarioById = this.deleteUsuarioById.bind(this)));
+    this.router.post('/no-auth/usuario/login', (this.login = this.login.bind(this)));
+  }
+
+  /**
+   * Endpoint para fazer login
+   *
+   * @private
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  private login(req: Request, res: Response, next: NextFunction) {
+    this.usuarioController
+      .login(req.body)
+      .then(() => res.send())
+      .catch(next);
+  }
+
+  /**
+   * Endpoint para retornar o usuário logado
+   *
+   * @private
+   * @param {CustomRequest} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  private findPerfil(req: CustomRequest, res: Response, next: NextFunction) {
+    this.usuarioController
+      .findPerfil(req.userLogged)
+      .then(data => res.send(data))
+      .catch(next);
   }
 
   /**

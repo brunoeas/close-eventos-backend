@@ -2,6 +2,10 @@ import express, { Application, Response, Request, NextFunction } from 'express';
 import cors from 'cors';
 import services from './routes';
 import CustomException from './exception/custom-exception';
+import Usuario from './models/usuario';
+import ExceptionEnum from './exception/exception-enum';
+
+export type CustomRequest = Request & { userLogged: Usuario };
 
 /**
  * Classe principal que inicia o App
@@ -31,6 +35,7 @@ class App {
   private middlewares(): void {
     this.express.use(express.json());
     this.express.use(cors());
+    this.authentication();
   }
 
   /**
@@ -55,6 +60,44 @@ class App {
           error: err
         });
       }
+    });
+  }
+
+  /**
+   * Configura o interceptor para a autenticação e persistência dos dados do usuário logado
+   */
+  private authentication() {
+    this.express.use(async function(req: CustomRequest, res: Response, next: NextFunction) {
+      if (req.path.startsWith('/no-auth')) {
+        next();
+        return;
+      }
+
+      const { authorization } = req.headers;
+      console.log('\n\nreq.headers: ', req.headers);
+      const emailToken: string = authorization?.replace('Bearer ', '');
+
+      if (!emailToken) {
+        res.status(401).send();
+        return;
+      }
+
+      let usuarioLogado: Usuario | null = null;
+      try {
+        usuarioLogado = await Usuario.findOne({ where: { dsEmail: emailToken } });
+      } catch (err) {
+        res.status(401).send({ message: err?.message || 'Ocorreu um erro no servidor', error: err });
+        return;
+      }
+
+      if (!usuarioLogado) {
+        res.status(401).send(new CustomException(ExceptionEnum.USUARIO_INEXISTENTE));
+        return;
+      }
+
+      req.userLogged = usuarioLogado;
+
+      next();
     });
   }
 }
