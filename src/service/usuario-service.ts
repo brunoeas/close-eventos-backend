@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import Service from './index';
+import Service from './';
 import UsuarioController from '../controller/usuario-controller';
 import { CustomRequest } from '../app';
 
@@ -24,7 +24,7 @@ class UsuarioService extends Service {
     this.router.get('/usuario', (this.findAllUsuarios = this.findAllUsuarios.bind(this)));
     this.router.get('/usuario/perfil', (this.findPerfil = this.findPerfil.bind(this)));
     this.router.get('/usuario/:id', (this.findUsuarioById = this.findUsuarioById.bind(this)));
-    this.router.post('/usuario', (this.saveUsuario = this.saveUsuario.bind(this)));
+    this.router.post('/no-auth/usuario', (this.saveUsuario = this.saveUsuario.bind(this)));
     this.router.put('/usuario', (this.updateUsuario = this.updateUsuario.bind(this)));
     this.router.delete('/usuario/:id', (this.deleteUsuarioById = this.deleteUsuarioById.bind(this)));
     this.router.post('/no-auth/usuario/login', (this.login = this.login.bind(this)));
@@ -116,7 +116,7 @@ class UsuarioService extends Service {
   private updateUsuario(req: Request, res: Response, next: NextFunction): void {
     this.usuarioController
       .updateUsuario(req.body)
-      .then(() => res.send())
+      .then(data => res.send(data))
       .catch(next);
   }
 
