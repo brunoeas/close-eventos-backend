@@ -142,6 +142,16 @@ Evento.init(
       field: 'ds_complemento',
       type: DataTypes.STRING(200)
     },
+    idUF: {
+      field: 'id_uf',
+      allowNull: false,
+      type: DataTypes.INTEGER
+    },
+    idMunicipio: {
+      field: 'id_municipio',
+      allowNull: false,
+      type: DataTypes.INTEGER
+    },
     idAdministrador: {
       field: 'id_administrador',
       type: DataTypes.INTEGER,

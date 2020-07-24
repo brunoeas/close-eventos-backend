@@ -64,17 +64,20 @@ class UsuarioController {
    * @param {*} dto - DTO do Usuário
    * @returns {Promise<any>} Promise
    */
-  public async updateUsuario(dto: any): Promise<void> {
+  public async updateUsuario(dto: any): Promise<any> {
     const usuario = this.usuarioConverter.filterPropsDto(dto);
     usuario.dtNascimento = formatDate(dto.dtNascimento, 'YYYY-MM-DD');
 
-    const [numberOfAffectedRows] = await Usuario.update(usuario, {
-      where: { idUsuario: usuario.idUsuario }
+    const [numberOfAffectedRows, [dtoUpdated]] = await Usuario.update(usuario, {
+      where: { idUsuario: usuario.idUsuario },
+      returning: true
     });
 
     if (numberOfAffectedRows === 0) {
       throw new CustomException(ExceptionEnum.USUARIO_INEXISTENTE);
     }
+
+    return this.usuarioConverter.ormToDto(dtoUpdated);
   }
 
   /**

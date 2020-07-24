@@ -74,7 +74,6 @@ class App {
       }
 
       const { authorization } = req.headers;
-      console.log('\n\nreq.headers: ', req.headers);
       const emailToken: string = authorization?.replace('Bearer ', '');
 
       if (!emailToken) {

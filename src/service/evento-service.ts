@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Service from './';
 import EventoController from '../controller/evento-controller';
+import { CustomRequest } from '../app';
 
 /**
  * Service do Evento
@@ -43,9 +44,9 @@ class EventoService extends Service {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  private findAllEventos(req: Request, res: Response, next: NextFunction) {
+  private findAllEventos(req: CustomRequest, res: Response, next: NextFunction) {
     this.eventoController
-      .findAllUsuarios()
+      .findAllEventos(req.userLogged)
       .then(data => res.send(data))
       .catch(next);
   }

@@ -5,6 +5,7 @@ import ExceptionEnum from '../exception/exception-enum';
 import CustomException from '../exception/custom-exception';
 import UsuarioConverter from '../converter/usuario-converter';
 import EventoUsuario from '../models/evento-usuario';
+import SituacaoParticipanteEnum from '../enumeration/situacao-participante-enum';
 
 /**
  * Controller do Evento
@@ -124,13 +125,33 @@ class EventoController {
   /**
    * Retorna todos os Evento
    *
+   * @param {Usuario} usuarioLogado - Usuário logado que mandou a request
    * @returns {Promise<any[]>} Uma Promise com todos os Eventos
    */
-  public async findAllUsuarios(): Promise<any[]> {
-    return Evento.findAll({ include: [{ model: Usuario, as: 'administrador' }] }).then(data =>
+  public async findAllEventos(usuarioLogado: Usuario): Promise<any[]> {
+    return Evento.findAll({
+      order: [['dhInicio', 'DESC']],
+      include: [
+        { model: Usuario, as: 'administrador' },
+        { model: EventoUsuario, as: 'participantesList', include: [{ model: Usuario, as: 'usuario' }] }
+      ]
+    }).then(data =>
       data.map(orm => {
         const dto = this.eventoConverter.ormToDto(orm);
         dto.administrador = this.usuarioConverter.ormToDto(orm.administrador);
+
+        const participantesOrmList = orm.participantesList.map(eventoUsuario => eventoUsuario.usuario);
+        dto.participantesList = this.usuarioConverter.ormListToDtoList(participantesOrmList);
+
+        const isParticipante =
+          dto.participantesList.find(
+            (participante: any) => participante.idUsuario === usuarioLogado.idUsuario
+          ) !== undefined;
+
+        dto.stParticipante = isParticipante
+          ? SituacaoParticipanteEnum.CONFIRMADO
+          : SituacaoParticipanteEnum.NAO_CONFIRMADO;
+
         return dto;
       })
     );

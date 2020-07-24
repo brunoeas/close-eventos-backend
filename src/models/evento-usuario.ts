@@ -72,12 +72,14 @@ EventoUsuario.init(
 
 Evento.belongsToMany(Usuario, {
   through: EventoUsuario,
-  foreignKey: 'idEvento',
-  as: 'participantesList'
+  foreignKey: 'idEvento'
 });
 Usuario.belongsToMany(Evento, {
   through: EventoUsuario,
   foreignKey: 'idUsuario'
 });
+
+EventoUsuario.belongsTo(Usuario, { foreignKey: 'idUsuario', as: 'usuario' });
+Evento.hasMany(EventoUsuario, { foreignKey: 'idEvento', as: 'participantesList' });
 
 export default EventoUsuario;
